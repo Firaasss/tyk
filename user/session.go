@@ -225,16 +225,23 @@ func (s *SessionState) KeyHashEmpty() bool {
 	return s.keyHash == ""
 }
 
-func (s *SessionState) Lifetime(fallback int64, forceGlobalSessionLifetime bool, globalSessionLifetime int64) int64 {
+func (s *SessionState) Lifetime(respectKeySessionLifeTime bool, fallback int64, forceGlobalSessionLifetime bool, globalSessionLifetime int64) int64 {
+	if respectKeySessionLifeTime {
+		return s.SessionLifetime
+	}
+
 	if forceGlobalSessionLifetime {
 		return globalSessionLifetime
 	}
+
 	if s.SessionLifetime > 0 {
 		return s.SessionLifetime
 	}
+
 	if fallback > 0 {
 		return fallback
 	}
+
 	return 0
 }
 

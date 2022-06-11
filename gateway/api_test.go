@@ -1192,6 +1192,54 @@ func TestKeyHandler_HashingDisabled(t *testing.T) {
 	})
 }
 
+func TestSessionLifetime(t *testing.T) {
+	const respectingAPI = "respectingAPI"
+	const overridingAPI = "overridingAPI"
+
+	ts := StartTest(nil)
+	defer ts.Close()
+
+	t.Run("respect session lifetime in key level", func(t *testing.T) {
+		ts.Gw.BuildAndLoadAPI(func(spec *APISpec) {
+			spec.APIID = respectingAPI
+			spec.UseKeylessAccess = false
+			spec.SessionLifetime = 1
+			spec.RespectKeySessionLifetime = true
+		})
+
+		_, toBeRespectedKey := ts.CreateSession(func(s *user.SessionState) {
+			s.AccessRights = map[string]user.AccessDefinition{respectingAPI: {
+				APIID: respectingAPI,
+			}}
+		})
+
+		_, _ = ts.Run(t, []test.TestCase{
+			{AdminAuth: true, Path: "/tyk/keys/" + toBeRespectedKey, Code: http.StatusOK, Delay: time.Second},
+			{AdminAuth: true, Path: "/tyk/keys/" + toBeRespectedKey, Code: http.StatusOK},
+		}...)
+	})
+
+	t.Run("override session lifetime with api level", func(t *testing.T) {
+		ts.Gw.BuildAndLoadAPI(func(spec *APISpec) {
+			spec.APIID = overridingAPI
+			spec.UseKeylessAccess = false
+			spec.SessionLifetime = 1
+			spec.RespectKeySessionLifetime = false
+		})
+
+		_, toBeOverriddenKey := ts.CreateSession(func(s *user.SessionState) {
+			s.AccessRights = map[string]user.AccessDefinition{overridingAPI: {
+				APIID: overridingAPI,
+			}}
+		})
+
+		_, _ = ts.Run(t, []test.TestCase{
+			{AdminAuth: true, Path: "/tyk/keys/" + toBeOverriddenKey, Code: http.StatusOK, Delay: time.Second},
+			{AdminAuth: true, Path: "/tyk/keys/" + toBeOverriddenKey, Code: http.StatusNotFound},
+		}...)
+	})
+}
+
 func TestInvalidateCache(t *testing.T) {
 	ts := StartTest(nil)
 	defer ts.Close()

@@ -583,6 +583,7 @@ type APIDefinition struct {
 	CustomMiddleware           MiddlewareSection      `bson:"custom_middleware" json:"custom_middleware"`
 	CustomMiddlewareBundle     string                 `bson:"custom_middleware_bundle" json:"custom_middleware_bundle"`
 	CacheOptions               CacheOptions           `bson:"cache_options" json:"cache_options"`
+	RespectKeySessionLifetime  bool                   `bson:"respect_key_session_lifetime" json:"respect_key_session_lifetime"`
 	SessionLifetime            int64                  `bson:"session_lifetime" json:"session_lifetime"`
 	Active                     bool                   `bson:"active" json:"active"`
 	Internal                   bool                   `bson:"internal" json:"internal"`
